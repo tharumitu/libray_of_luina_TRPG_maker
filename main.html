@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Library of Ruina TRPG Character Sheet</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=Noto+Serif+JP:wght@500;700;900&display=swap');
+
+    :root {
+      --bg-dark: #070709;
+      --panel-bg: rgba(15, 15, 18, 0.9);
+      --border-gold: #c5a059;
+      --border-gold-dark: #5c4722;
+      --accent-cyan: #28b5c4;
+      --text-main: #e2ded0;
+      --text-gold: #e8c374;
+      --text-muted: #8a8880;
+
+      /* レアリティカラー */
+      --rarity-paper: #6e7275;
+      --rarity-common: #3d8c40;
+      --rarity-uncommon: #2864a6;
+      --rarity-rare: #7b36a8;
+      --rarity-unique: #c49628;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: 'Cinzel', 'Noto Serif JP', serif;
+      background-color: var(--bg-dark);
+      background-image: 
+        radial-gradient(circle at 50% 50%, rgba(20, 20, 30, 0.8), #030304),
+        linear-gradient(rgba(197, 160, 89, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(197, 160, 89, 0.03) 1px, transparent 1px);
+      background-size: 100% 100%, 40px 40px, 40px 40px;
+      color: var(--text-main);
+      margin: 0;
+      padding: 30px 15px;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 980px;
+      margin: 0 auto;
+      background: var(--panel-bg);
+      border: 2px solid var(--border-gold);
+      box-shadow: 0 0 20px rgba(0,0,0,0.9), inset 0 0 15px rgba(0,0,0,0.8);
+      padding: 30px;
+      position: relative;
+    }
+
+    .header {
+      text-align: center;
+      border-bottom: 2px solid var(--border-gold);
+      padding-bottom: 15px;
+      margin-bottom: 25px;
+    }
+
+    .header h1 {
+      font-size: 2.2rem;
+      color: var(--text-gold);
+      letter-spacing: 4px;
+      margin: 0;
+      text-shadow: 0 0 10px rgba(232, 195, 116, 0.4);
+    }
+
+    .section-title {
+      color: var(--text-gold);
+      font-size: 1.1rem;
+      letter-spacing: 2px;
+      border-left: 4px solid var(--border-gold);
+      padding-left: 10px;
+      margin-top: 30px;
+      margin-bottom: 15px;
+      background: linear-gradient(90deg, rgba(197, 160, 89, 0.15), transparent);
+    }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; }
+
+    .form-group { margin-bottom: 15px; }
+
+    label {
+      display: block;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 5px;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      background: #0d0d11;
+      border: 1px solid var(--border-gold-dark);
+      color: var(--text-main);
+      padding: 10px;
+      font-family: inherit;
+      font-size: 0.95rem;
+      outline: none;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--border-gold);
+      box-shadow: 0 0 8px rgba(197, 160, 89, 0.4);
+    }
+
+    /* --- Ruina風 バトルページ（カード）リスト --- */
+    .deck-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 15px;
+      margin-bottom: 15px;
+    }
+
+    .battle-card {
+      background: #0d0e12;
+      border: 2px solid var(--border-gold);
+      position: relative;
+      padding: 12px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.8);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .battle-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 20px rgba(197, 160, 89, 0.2);
+    }
+
+    /* レアリティカラー枠 */
+    .battle-card[data-rarity="paper"] { border-color: var(--rarity-paper); }
+    .battle-card[data-rarity="common"] { border-color: var(--rarity-common); }
+    .battle-card[data-rarity="uncommon"] { border-color: var(--rarity-uncommon); }
+    .battle-card[data-rarity="rare"] { border-color: var(--rarity-rare); }
+    .battle-card[data-rarity="unique"] { border-color: var(--rarity-unique); }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      padding-bottom: 8px;
+    }
+
+    /* コストオーブ */
+    .cost-orb {
+      width: 32px;
+      height: 32px;
+      background: var(--accent-cyan);
+      color: #000;
+      font-weight: 900;
+      font-size: 1.1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transform: rotate(45deg);
+      border: 2px solid #fff;
+      box-shadow: 0 0 8px var(--accent-cyan);
+      flex-shrink: 0;
+      margin: 4px;
+    }
+
+    .cost-orb span {
+      transform: rotate(-45deg);
+    }
+
+    .card-title-input {
+      font-size: 1.05rem;
+      font-weight: bold;
+      color: #fff;
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid transparent;
+      padding: 2px;
+    }
+    .card-title-input:focus {
+      border-bottom-color: var(--border-gold);
+      box-shadow: none;
+    }
+
+    /* コスト入力フィールド（数値＋上下ボタン） */
+    .cost-input-group {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      background: #15161c;
+      padding: 2px 6px;
+      border: 1px solid var(--border-gold-dark);
+    }
+    
+    .cost-input-group label {
+      margin: 0;
+      font-size: 0.75rem;
+      white-space: nowrap;
+    }
+
+    .cost-number-input {
+      width: 45px !important;
+      padding: 2px 4px !important;
+      font-size: 0.85rem !important;
+      text-align: center;
+      border: none !important;
+      background: transparent !important;
+    }
+
+    /* カード属性選択 */
+    .card-meta {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .card-meta select {
+      font-size: 0.75rem;
+      padding: 4px;
+      background: #15161c;
+    }
+
+    .card-body textarea {
+      font-size: 0.85rem;
+      line-height: 1.4;
+      background: #050507;
+      border: 1px solid rgba(197, 160, 89, 0.3);
+      resize: vertical;
+      min-height: 80px;
+      color: #d1cdbf;
+    }
+
+    .card-footer {
+      text-align: right;
+    }
+
+    /* ボタン */
+    .btn {
+      background: linear-gradient(180deg, #2a251a, #14120d);
+      border: 1px solid var(--border-gold);
+      color: var(--text-gold);
+      padding: 10px 20px;
+      font-family: inherit;
+      font-size: 0.9rem;
+      font-weight: bold;
+      letter-spacing: 1px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn:hover {
+      background: linear-gradient(180deg, #423a28, #221e15);
+      color: #fff;
+      box-shadow: 0 0 10px rgba(232, 195, 116, 0.4);
+    }
+
+    .btn-add {
+      width: 100%;
+      background: rgba(15, 15, 20, 0.8);
+      border: 1px dashed var(--border-gold-dark);
+      color: var(--text-muted);
+      padding: 12px;
+    }
+
+    .btn-danger {
+      background: rgba(60, 10, 10, 0.8);
+      border: 1px solid #8b2525;
+      color: #ffaaaa;
+      padding: 4px 8px;
+      font-size: 0.75rem;
+    }
+
+    .btn-ccfolia {
+      background: linear-gradient(180deg, #8c6e33, #423213);
+      border: 2px solid var(--border-gold);
+      color: #fff;
+      font-size: 1.1rem;
+      width: 100%;
+      padding: 16px;
+      margin-top: 25px;
+    }
+
+    #statusMsg {
+      text-align: center;
+      color: var(--accent-cyan);
+      font-weight: bold;
+      margin-top: 15px;
+      height: 20px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <h1>LIBRARY OF RUINA</h1>
+    <div style="font-size:0.8rem; color:var(--text-muted);">TRPG CHARACTER & BATTLE PAGE SYSTEM</div>
+  </div>
+
+  <!-- 基本情報（初期値は空欄） -->
+  <div class="section-title">SPECIFICATION // 基本情報</div>
+  <div class="grid-2">
+    <div class="form-group">
+      <label>司書名 (NAME)</label>
+      <input type="text" id="charName" value="" placeholder="キャラクター名を入力">
+    </div>
+    <div class="form-group">
+      <label>階層 / 階級 (AFFILIATION)</label>
+      <input type="text" id="charClass" value="" placeholder="例: 総記の階 / 9級フィクサー">
+    </div>
+  </div>
+
+  <!-- ステータス -->
+  <div class="section-title">VITAL STATUS // ステータス</div>
+  <div class="grid-3">
+    <div class="form-group">
+      <label>体力 (HP)</label>
+      <input type="number" id="hp" value="50">
+    </div>
+    <div class="form-group">
+      <label>混乱抵抗値 (STAGGER)</label>
+      <input type="number" id="stagger" value="30">
+    </div>
+    <div class="form-group">
+      <label>最大光 (MAX LIGHT)</label>
+      <input type="number" id="light" value="3">
+    </div>
+  </div>
+  <div class="grid-2">
+    <div class="form-group">
+      <label>速度ダイス数</label>
+      <input type="number" id="speedDiceCount" value="1">
+    </div>
+    <div class="form-group">
+      <label>速度ダイス面 (例: 1d6)</label>
+      <input type="text" id="speedDiceFormula" value="1d6">
+    </div>
+  </div>
+
+  <!-- 攻撃耐性 -->
+  <div class="section-title">RESISTANCE // 攻撃耐性</div>
+  <div class="grid-3">
+    <div class="form-group">
+      <label>斬撃 (SLASH)</label>
+      <select id="resSlash">
+        <option value="脆弱(x2.0)">脆弱 (x2.0)</option>
+        <option value="一般(x1.0)" selected>一般 (x1.0)</option>
+        <option value="耐性(x0.5)">耐性 (x0.5)</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>貫通 (PIERCE)</label>
+      <select id="resPierce">
+        <option value="脆弱(x2.0)">脆弱 (x2.0)</option>
+        <option value="一般(x1.0)" selected>一般 (x1.0)</option>
+        <option value="耐性(x0.5)">耐性 (x0.5)</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>打撃 (BLUNT)</label>
+      <select id="resBlunt">
+        <option value="脆弱(x2.0)">脆弱 (x2.0)</option>
+        <option value="一般(x1.0)" selected>一般 (x1.0)</option>
+        <option value="耐性(x0.5)">耐性 (x0.5)</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- バトルページ（カード）構築 -->
+  <div class="section-title">DECK BUILD // バトルページ構築</div>
+  
+  <div id="deckContainer" class="deck-grid"></div>
+  
+  <button type="button" class="btn btn-add" onclick="addPage()">+ ADD NEW BATTLE PAGE</button>
+
+  <!-- 出力 -->
+  <button type="button" class="btn btn-ccfolia" onclick="copyCcfoliaJson()">
+    EXPORT TO CCFOLIA (ココフォリア出力)
+  </button>
+  <div id="statusMsg"></div>
+</div>
+
+<script>
+  // バトルページ初期データ
+  let pages = [
+    { name: "軽やかな足取り", cost: 0, range: "近接", rarity: "common", detail: "[斬撃] 1d6 (Hit: 混乱+1)\n[回避] 1d6+2" },
+    { name: "痛恨の直撃", cost: 1, range: "近接", rarity: "uncommon", detail: "[打撃] 2d6+1 (Hit: 混乱+3)" },
+    { name: "工房の猛攻", cost: 2, range: "近接", rarity: "rare", detail: "[貫通] 1d6+3\n[斬撃] 2d6\n[ガード] 1d6+1" }
+  ];
+
+  function renderPages() {
+    const container = document.getElementById('deckContainer');
+    container.innerHTML = '';
+
+    pages.forEach((p, index) => {
+      const card = document.createElement('div');
+      card.className = 'battle-card';
+      card.setAttribute('data-rarity', p.rarity);
+
+      card.innerHTML = `
+        <div class="card-header">
+          <div class="cost-orb">
+            <span>${p.cost}</span>
+          </div>
+          <input type="text" class="card-title-input" value="${p.name}" placeholder="ページ名" onchange="pages[${index}].name = this.value">
+        </div>
+
+        <div class="card-meta">
+          <div class="cost-input-group">
+            <label>Cost:</label>
+            <input type="number" class="cost-number-input" min="0" max="6" value="${p.cost}" onchange="updateCost(${index}, this.value)">
+          </div>
+          <select onchange="pages[${index}].range = this.value;">
+            <option value="近接" ${p.range==='近接'?'selected':''}>近接</option>
+            <option value="遠距離" ${p.range==='遠距離'?'selected':''}>遠距離</option>
+            <option value="防御" ${p.range==='防御'?'selected':''}>防御</option>
+          </select>
+          <select onchange="pages[${index}].rarity = this.value; renderPages();">
+            <option value="paper" ${p.rarity==='paper'?'selected':''}>ペーパー</option>
+            <option value="common" ${p.rarity==='common'?'selected':''}>一般 (緑)</option>
+            <option value="uncommon" ${p.rarity==='uncommon'?'selected':''}>高級 (青)</option>
+            <option value="rare" ${p.rarity==='rare'?'selected':''}>限定 (紫)</option>
+            <option value="unique" ${p.rarity==='unique'?'selected':''}>芸術 (金)</option>
+          </select>
+        </div>
+
+        <div class="card-body">
+          <textarea placeholder="ダイス構成・効果\n[斬撃] 1d6+2\n[回避] 1d6" onchange="pages[${index}].detail = this.value">${p.detail}</textarea>
+        </div>
+
+        <div class="card-footer">
+          <button type="button" class="btn btn-danger" onclick="removePage(${index})">REMOVE</button>
+        </div>
+      `;
+      container.appendChild(card);
+    });
+  }
+
+  // コストの更新処理（0〜6に制限し、オーブの数字もリアルタイム反映）
+  function updateCost(index, val) {
+    let costVal = Number(val);
+    if (costVal < 0) costVal = 0;
+    if (costVal > 6) costVal = 6;
+    
+    pages[index].cost = costVal;
+    renderPages(); // オーブの表示を即時反映させるため再描画
+  }
+
+  function addPage() {
+    pages.push({ name: "新しいページ", cost: 0, range: "近接", rarity: "common", detail: "" });
+    renderPages();
+  }
+
+  function removePage(index) {
+    pages.splice(index, 1);
+    renderPages();
+  }
+
+  renderPages();
+
+  // ココフォリア用JSONコピー
+  function copyCcfoliaJson() {
+    const name = document.getElementById('charName').value || "名無しの司書";
+    const charClass = document.getElementById('charClass').value || "未所属";
+    const hp = Number(document.getElementById('hp').value);
+    const stagger = Number(document.getElementById('stagger').value);
+    const light = Number(document.getElementById('light').value);
+    const speedDiceCount = document.getElementById('speedDiceCount').value;
+    const speedDiceFormula = document.getElementById('speedDiceFormula').value;
+    
+    const resSlash = document.getElementById('resSlash').value;
+    const resPierce = document.getElementById('resPierce').value;
+    const resBlunt = document.getElementById('resBlunt').value;
+
+    let palette = `// --- 速度ダイス ---\n`;
+    for(let i=1; i<=speedDiceCount; i++) {
+      palette += `(${speedDiceFormula}) 速度ダイス${i}\n`;
+    }
+
+    palette += `\n// --- バトルページ (デッキ) ---\n`;
+    pages.forEach(p => {
+      palette += `【${p.name}】(Cost:${p.cost} / ${p.range})\n${p.detail}\n\n`;
+    });
+
+    palette += `// --- 耐性 ---
+斬撃:${resSlash} / 貫通:${resPierce} / 打撃:${resBlunt}\n`;
+
+    const ccfoliaData = {
+      kind: "character",
+      data: {
+        name: name,
+        memo: `所属: ${charClass}\n\n【耐性】\n斬撃: ${resSlash}\n貫通: ${resPierce}\n打撃: ${resBlunt}`,
+        status: [
+          { label: "HP", value: hp, max: hp },
+          { label: "混乱抵抗", value: stagger, max: stagger },
+          { label: "光", value: light, max: light }
+        ],
+        params: [
+          { label: "速度数", value: String(speedDiceCount) }
+        ],
+        commands: palette
+      }
+    };
+
+    navigator.clipboard.writeText(JSON.stringify(ccfoliaData)).then(() => {
+      const msg = document.getElementById('statusMsg');
+      msg.innerText = "◆ COPIED TO CLIPBOARD (ココフォリア画面で Ctrl+V してください) ◆";
+      setTimeout(() => msg.innerText = "", 4000);
+    }).catch(err => {
+      alert("コピーに失敗しました: " + err);
+    });
+  }
+</script>
+</body>
+</html>
