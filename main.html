@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Library of Ruina TRPG </title>
+  <title>Library of Ruina TRPG Character Sheet</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=Noto+Serif+JP:wght@500;700;900&display=swap');
 
@@ -181,7 +181,7 @@
       box-shadow: none;
     }
 
-    /* コスト入力フィールド（数値＋上下ボタン） */
+    /* コスト入力フィールド */
     .cost-input-group {
       display: flex;
       align-items: center;
@@ -295,7 +295,7 @@
     <div style="font-size:0.8rem; color:var(--text-muted);">TRPG CHARACTER & BATTLE PAGE SYSTEM</div>
   </div>
 
-  <!-- 基本情報（初期値は空欄） -->
+  <!-- 基本情報 -->
   <div class="section-title">SPECIFICATION // 基本情報</div>
   <div class="grid-2">
     <div class="form-group">
@@ -330,7 +330,7 @@
       <input type="number" id="speedDiceCount" value="1">
     </div>
     <div class="form-group">
-      <label>速度ダイス面 </label>
+      <label>速度ダイス面 (例: 1d6)</label>
       <input type="text" id="speedDiceFormula" value="1d6">
     </div>
   </div>
@@ -344,7 +344,6 @@
         <option value="脆弱(x2.0)">脆弱 (x2.0)</option>
         <option value="一般(x1.0)" selected>一般 (x1.0)</option>
         <option value="耐性(x0.5)">耐性 (x0.5)</option>
-        <option value="無敵(x0.0)">無敵 (x0.0)</option>
       </select>
     </div>
     <div class="form-group">
@@ -353,7 +352,6 @@
         <option value="脆弱(x2.0)">脆弱 (x2.0)</option>
         <option value="一般(x1.0)" selected>一般 (x1.0)</option>
         <option value="耐性(x0.5)">耐性 (x0.5)</option>
-        <option value="無敵(x0.0)">無敵 (x0.0)</option>
       </select>
     </div>
     <div class="form-group">
@@ -362,13 +360,12 @@
         <option value="脆弱(x2.0)">脆弱 (x2.0)</option>
         <option value="一般(x1.0)" selected>一般 (x1.0)</option>
         <option value="耐性(x0.5)">耐性 (x0.5)</option>
-        <option value="無敵(x0.0)">無敵 (x0.0)</option>
       </select>
     </div>
   </div>
 
   <!-- バトルページ（カード）構築 -->
-  <div class="section-title">BATTLE PAGE BUILD // バトルページ構築</div>
+  <div class="section-title">DECK BUILD // バトルページ構築</div>
   
   <div id="deckContainer" class="deck-grid"></div>
   
@@ -382,10 +379,8 @@
 </div>
 
 <script>
-  // バトルページ初期データ
-  let pages = [
-
-  ];
+  // 初期データは空配列（カード0枚からスタート）
+  let pages = [];
 
   function renderPages() {
     const container = document.getElementById('deckContainer');
@@ -424,7 +419,7 @@
         </div>
 
         <div class="card-body">
-          <textarea placeholder="ダイス構成・効果\n[斬撃] 1d6+2\n[回避] 1d6" onchange="pages[${index}].detail = this.value">${p.detail}</textarea>
+          <textarea placeholder="ダイス構成・効果\n例:\n[斬撃] 1d6+2\n[回避] 1d6" onchange="pages[${index}].detail = this.value">${p.detail}</textarea>
         </div>
 
         <div class="card-footer">
@@ -435,18 +430,17 @@
     });
   }
 
-  // コストの更新処理（0〜6に制限し、オーブの数字もリアルタイム反映）
   function updateCost(index, val) {
     let costVal = Number(val);
     if (costVal < 0) costVal = 0;
     if (costVal > 6) costVal = 6;
     
     pages[index].cost = costVal;
-    renderPages(); // オーブの表示を即時反映させるため再描画
+    renderPages();
   }
 
   function addPage() {
-    pages.push({ name: "新しいページ", cost: 0, range: "近接", rarity: "common", detail: "" });
+    pages.push({ name: "", cost: 0, range: "近接", rarity: "common", detail: "" });
     renderPages();
   }
 
@@ -478,7 +472,8 @@
 
     palette += `\n// --- バトルページ (デッキ) ---\n`;
     pages.forEach(p => {
-      palette += `【${p.name}】(Cost:${p.cost} / ${p.range})\n${p.detail}\n\n`;
+      const pageName = p.name || "名称未設定";
+      palette += `【${pageName}】(Cost:${p.cost} / ${p.range})\n${p.detail}\n\n`;
     });
 
     palette += `// --- 耐性 ---
