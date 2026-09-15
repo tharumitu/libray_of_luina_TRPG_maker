@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Library of Ruina TRPG Character Sheet</title>
+  <title>Library of Ruina TRPG </title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=Noto+Serif+JP:wght@500;700;900&display=swap');
 
@@ -330,7 +330,7 @@
       <input type="number" id="speedDiceCount" value="1">
     </div>
     <div class="form-group">
-      <label>速度ダイス面 (例: 1d6)</label>
+      <label>速度ダイス面 </label>
       <input type="text" id="speedDiceFormula" value="1d6">
     </div>
   </div>
@@ -344,6 +344,7 @@
         <option value="脆弱(x2.0)">脆弱 (x2.0)</option>
         <option value="一般(x1.0)" selected>一般 (x1.0)</option>
         <option value="耐性(x0.5)">耐性 (x0.5)</option>
+        <option value="無敵(x0.0)">無敵 (x0.0)</option>
       </select>
     </div>
     <div class="form-group">
@@ -352,6 +353,7 @@
         <option value="脆弱(x2.0)">脆弱 (x2.0)</option>
         <option value="一般(x1.0)" selected>一般 (x1.0)</option>
         <option value="耐性(x0.5)">耐性 (x0.5)</option>
+        <option value="無敵(x0.0)">無敵 (x0.0)</option>
       </select>
     </div>
     <div class="form-group">
@@ -360,12 +362,13 @@
         <option value="脆弱(x2.0)">脆弱 (x2.0)</option>
         <option value="一般(x1.0)" selected>一般 (x1.0)</option>
         <option value="耐性(x0.5)">耐性 (x0.5)</option>
+        <option value="無敵(x0.0)">無敵 (x0.0)</option>
       </select>
     </div>
   </div>
 
   <!-- バトルページ（カード）構築 -->
-  <div class="section-title">DECK BUILD // バトルページ構築</div>
+  <div class="section-title">BATTLE PAGE BUILD // バトルページ構築</div>
   
   <div id="deckContainer" class="deck-grid"></div>
   
@@ -381,9 +384,7 @@
 <script>
   // バトルページ初期データ
   let pages = [
-    { name: "軽やかな足取り", cost: 0, range: "近接", rarity: "common", detail: "[斬撃] 1d6 (Hit: 混乱+1)\n[回避] 1d6+2" },
-    { name: "痛恨の直撃", cost: 1, range: "近接", rarity: "uncommon", detail: "[打撃] 2d6+1 (Hit: 混乱+3)" },
-    { name: "工房の猛攻", cost: 2, range: "近接", rarity: "rare", detail: "[貫通] 1d6+3\n[斬撃] 2d6\n[ガード] 1d6+1" }
+
   ];
 
   function renderPages() {
