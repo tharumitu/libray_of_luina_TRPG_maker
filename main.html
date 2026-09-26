@@ -172,15 +172,15 @@
       box-shadow: 0 0 6px rgba(0,0,0,0.8);
     }
 
-    .card-name-input {
-      background: transparent;
-      border: none;
+    .card-title-display {
       color: #fff;
       font-weight: bold;
       font-size: 0.95rem;
       width: 100%;
-      padding: 0;
       text-shadow: 1px 1px 3px #000;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .type-icon {
@@ -209,25 +209,17 @@
       border-bottom: 1px solid rgba(255,255,255,0.1);
     }
 
-    /* テキスト領域（下部） */
+    /* テキスト領域（下部：改行を正常画像化するためのdiv構成） */
     .card-text-area {
       flex: 1;
       padding: 10px;
       background: #060608;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .card-text-area textarea {
-      flex: 1;
-      background: transparent;
-      border: none;
       color: #e2ded0;
       font-size: 0.85rem;
       line-height: 1.4;
-      resize: none;
-      padding: 0;
-      box-shadow: none;
+      white-space: pre-wrap; /* 改行を画面と画像の両方に反映 */
+      word-break: break-all;
+      overflow-y: auto;
     }
 
     /* カード外の入力・編集コントローラー */
@@ -253,10 +245,9 @@
       white-space: nowrap;
     }
 
-    .edit-row input, .edit-row select {
+    .edit-row input, .edit-row select, .edit-row textarea {
       font-size: 0.75rem;
       padding: 3px 6px;
-      height: 26px;
     }
 
     /* ボタン */
@@ -440,19 +431,23 @@
         <div class="single-card" id="card-node-${index}" data-rarity="${p.rarity}">
           <div class="card-banner">
             <div class="cost-circle">${p.cost}</div>
-            <input type="text" class="card-name-input" value="${p.name}" placeholder="ページ名" onchange="pages[${index}].name = this.value">
+            <div class="card-title-display">${p.name || "名称未設定"}</div>
             <div class="type-icon">${typeSymbol}</div>
           </div>
           <div class="card-art-area">
             CARD ART AREA
           </div>
-          <div class="card-text-area">
-            <textarea placeholder="使用時効果・ダイス情報\n例:\n使用時 ページを1枚引く\n\n[斬撃] 4-8\n[打撃] 3-7" onchange="pages[${index}].detail = this.value">${p.detail}</textarea>
-          </div>
+          <!-- html2canvasで改行が崩れないようpre-wrap付きのdivで表示 -->
+          <div class="card-text-area">${p.detail || "効果・ダイスを入力..."}</div>
         </div>
 
-        <!-- 外部コントロールパネル -->
+        <!-- 外部コントロールパネル（入力編集エリア） -->
         <div class="card-edit-panel">
+          <div class="edit-row">
+            <label>名前:</label>
+            <input type="text" value="${p.name}" placeholder="ページ名" oninput="pages[${index}].name = this.value; updateCardView(${index});">
+          </div>
+
           <div class="edit-row">
             <label>コスト:</label>
             <input type="number" value="${p.cost}" style="width:50px;" onchange="pages[${index}].cost = Number(this.value); renderPages();">
@@ -475,7 +470,12 @@
             </select>
           </div>
 
-          <div class="edit-row" style="margin-top:2px;">
+          <div>
+            <label>効果・ダイス情報:</label>
+            <textarea style="height:60px; resize:vertical;" placeholder="改行もそのまま反映されます" oninput="pages[${index}].detail = this.value; updateCardView(${index});">${p.detail}</textarea>
+          </div>
+
+          <div class="edit-row" style="margin-top:4px;">
             <button type="button" class="btn btn-save" onclick="downloadCardImage(${index})">📷 画像として保存</button>
             <button type="button" class="btn btn-danger" onclick="removePage(${index})">削除</button>
           </div>
@@ -483,6 +483,18 @@
       `;
       container.appendChild(wrapper);
     });
+  }
+
+  // 入力された名前とテキストを即座にカード表示へ同期させる関数
+  function updateCardView(index) {
+    const cardNode = document.getElementById(`card-node-${index}`);
+    if (!cardNode) return;
+
+    const titleDisplay = cardNode.querySelector('.card-title-display');
+    const textArea = cardNode.querySelector('.card-text-area');
+
+    titleDisplay.textContent = pages[index].name || "名称未設定";
+    textArea.textContent = pages[index].detail || "効果・ダイスを入力...";
   }
 
   // 単体カード画像ダウンロード機能
