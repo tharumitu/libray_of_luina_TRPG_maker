@@ -106,6 +106,21 @@
       box-shadow: 0 0 8px rgba(197, 160, 89, 0.4);
     }
 
+    /* 一括インポートエリア */
+    .import-box {
+      background: #0d0e12;
+      border: 1px solid var(--border-gold-dark);
+      padding: 15px;
+      margin-bottom: 20px;
+    }
+
+    .import-box textarea {
+      height: 120px;
+      font-size: 0.85rem;
+      margin-bottom: 10px;
+      line-height: 1.4;
+    }
+
     /* --- 縦型カードレイアウト --- */
     .deck-grid {
       display: grid;
@@ -120,7 +135,6 @@
       gap: 10px;
     }
 
-    /* 独立したトレーディングカード本体 */
     .single-card {
       width: 100%;
       height: 380px;
@@ -140,7 +154,6 @@
     .single-card[data-rarity="rare"] { border-color: var(--rarity-rare); }
     .single-card[data-rarity="unique"] { border-color: var(--rarity-unique); }
 
-    /* カードヘッダー */
     .card-banner {
       background: var(--rarity-common);
       height: 42px;
@@ -197,7 +210,6 @@
       flex-shrink: 0;
     }
 
-    /* アート領域（上部） */
     .card-art-area {
       height: 120px;
       background: radial-gradient(circle, #22222d 0%, #050507 100%);
@@ -209,7 +221,6 @@
       border-bottom: 1px solid rgba(255,255,255,0.1);
     }
 
-    /* テキスト領域（下部：改行を正常画像化するためのdiv構成） */
     .card-text-area {
       flex: 1;
       padding: 10px;
@@ -217,12 +228,11 @@
       color: #e2ded0;
       font-size: 0.85rem;
       line-height: 1.4;
-      white-space: pre-wrap; /* 改行を画面と画像の両方に反映 */
+      white-space: pre-wrap;
       word-break: break-all;
       overflow-y: auto;
     }
 
-    /* カード外の入力・編集コントローラー */
     .card-edit-panel {
       background: #111217;
       border: 1px solid var(--border-gold-dark);
@@ -270,6 +280,13 @@
       box-shadow: 0 0 10px rgba(232, 195, 116, 0.4);
     }
 
+    .btn-import {
+      background: linear-gradient(180deg, #1d334a, #0d1926);
+      border-color: #2864a6;
+      color: #92c5fd;
+      width: 100%;
+    }
+
     .btn-save {
       background: linear-gradient(180deg, #1b4722, #0d2411);
       border-color: #3d8c40;
@@ -277,11 +294,6 @@
       font-size: 0.75rem;
       padding: 4px 8px;
       width: 100%;
-    }
-
-    .btn-save:hover {
-      background: linear-gradient(180deg, #286933, #13381a);
-      color: #fff;
     }
 
     .btn-add {
@@ -399,10 +411,24 @@
 
   <!-- バトルページ（カード）構築 -->
   <div class="section-title">DECK BUILD // バトルページ構築</div>
-  
+
+  <!-- テキスト一括読み込み欄 -->
+  <div class="import-box">
+    <label>テキストから一括生成（ここにそのままコピペ）:</label>
+    <textarea id="importText" placeholder="例：
+3･突破-光0 近
+貫1d5 的中|光を1回復
+
+1･落涙-光3 近
+戦闘開始|NE1蓄積
+斬1d3+2 的中|混乱ダメージを5与える"></textarea>
+    <button type="button" class="btn btn-import" onclick="parseTextToPages()">⚡ テキストからカードを一括読み込み</button>
+  </div>
+
+  <!-- カード一覧 -->
   <div id="deckContainer" class="deck-grid"></div>
   
-  <button type="button" class="btn btn-add" onclick="addPage()">+ ADD NEW BATTLE PAGE</button>
+  <button type="button" class="btn btn-add" onclick="addPage()">+ 手動でカードを1枚追加</button>
 
   <!-- 出力 -->
   <button type="button" class="btn btn-ccfolia" onclick="copyCcfoliaJson()">
@@ -413,6 +439,63 @@
 
 <script>
   let pages = [];
+
+  // テキスト形式を自動解析してカードを生成
+  function parseTextToPages() {
+    const rawText = document.getElementById('importText').value.trim();
+    if (!rawText) return;
+
+    // 空行で区切って各カードブロックを取得
+    const blocks = rawText.split(/\n\s*\n/);
+    let newPages = [];
+
+    blocks.forEach(block => {
+      const lines = block.trim().split('\n');
+      if (lines.length === 0) return;
+
+      const headerLine = lines[0].trim();
+      // パターン例: "3･突破-光0 近" や "1･落涙-光3 遠"
+      const match = headerLine.match(/^(\d+)[\s･・]*([^-\n]+)-光?(\d+)\s*(近|遠|防|近接|遠距離|防御)?/);
+
+      if (match) {
+        const count = parseInt(match[1], 10) || 1; // 枚数
+        const name = match[2].trim();              // カード名
+        const cost = parseInt(match[3], 10) || 0;  // コスト
+        let rangeRaw = match[4] || "近接";         // タイプ
+        
+        let range = "近接";
+        if (rangeRaw.includes("遠")) range = "遠距離";
+        if (rangeRaw.includes("防")) range = "防御";
+
+        // 残りの行（ダイスや効果）をテキストとして結合
+        const detail = lines.slice(1).join('\n').trim();
+
+        // 枚数分だけ同じカードを追加
+        for (let i = 0; i < count; i++) {
+          newPages.push({
+            name: name,
+            cost: cost,
+            range: range,
+            rarity: "common",
+            detail: detail
+          });
+        }
+      } else {
+        // ヘッダー構文に合わない場合は1枚の普通カードとして生成
+        newPages.push({
+          name: headerLine,
+          cost: 0,
+          range: "近接",
+          rarity: "common",
+          detail: lines.slice(1).join('\n').trim()
+        });
+      }
+    });
+
+    pages = pages.concat(newPages);
+    renderPages();
+    document.getElementById('importText').value = ''; // 入力欄リセット
+  }
 
   function renderPages() {
     const container = document.getElementById('deckContainer');
@@ -437,11 +520,10 @@
           <div class="card-art-area">
             CARD ART AREA
           </div>
-          <!-- html2canvasで改行が崩れないようpre-wrap付きのdivで表示 -->
           <div class="card-text-area">${p.detail || "効果・ダイスを入力..."}</div>
         </div>
 
-        <!-- 外部コントロールパネル（入力編集エリア） -->
+        <!-- 外部コントロールパネル -->
         <div class="card-edit-panel">
           <div class="edit-row">
             <label>名前:</label>
@@ -485,7 +567,6 @@
     });
   }
 
-  // 入力された名前とテキストを即座にカード表示へ同期させる関数
   function updateCardView(index) {
     const cardNode = document.getElementById(`card-node-${index}`);
     if (!cardNode) return;
@@ -497,14 +578,13 @@
     textArea.textContent = pages[index].detail || "効果・ダイスを入力...";
   }
 
-  // 単体カード画像ダウンロード機能
   function downloadCardImage(index) {
     const cardElement = document.getElementById(`card-node-${index}`);
     const cardName = pages[index].name || `battle-page-${index + 1}`;
 
     html2canvas(cardElement, {
       backgroundColor: null,
-      scale: 2 // 高解像度出力
+      scale: 2
     }).then(canvas => {
       const link = document.createElement('a');
       link.download = `${cardName}.png`;
