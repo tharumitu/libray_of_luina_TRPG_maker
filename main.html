@@ -234,11 +234,19 @@
       background: #060608;
       color: #e2ded0;
       font-size: 0.85rem;
-      line-height: 1.4;
+      line-height: 1.5;
       white-space: pre-wrap;
       word-break: break-all;
       overflow-y: auto;
       min-height: 200px;
+    }
+
+    /* カードテキスト内アイコン画像 */
+    .inline-dice-icon {
+      width: 18px;
+      height: 18px;
+      vertical-align: sub;
+      margin-right: 2px;
     }
 
     .card-edit-panel {
@@ -493,6 +501,32 @@
 <script>
   let pages = [];
 
+  // アイコンURL定義
+  const ICON_MAP = {
+    '打': 'https://static.wikia.nocookie.net/library-of-ruina/images/a/a2/H.png/revision/latest/scale-to-width-down/24?cb=20200531142341&path-prefix=ja',
+    '貫': 'https://static.wikia.nocookie.net/library-of-ruina/images/3/36/P.png/revision/latest/scale-to-width-down/24?cb=20200531142321&path-prefix=ja',
+    '斬': 'https://static.wikia.nocookie.net/library-of-ruina/images/8/82/S.png/revision/latest/scale-to-width-down/24?cb=20200531142418&path-prefix=ja',
+    '防': 'https://static.wikia.nocookie.net/library-of-ruina/images/f/f7/G.png/revision/latest/scale-to-width-down/24?cb=20200531142349&path-prefix=ja',
+    '光': 'https://static.wikia.nocookie.net/library-of-ruina/images/a/a6/Light.png/revision/latest/scale-to-width-down/20?cb=20200609120919&path-prefix=ja'
+  };
+
+  // テキスト内の指定文字の前にアイコン画像を挿入する関数
+  function parseDiceIcons(text) {
+    if (!text) return "テキストを入力";
+    
+    // HTML特殊文字を安全に置換
+    let safeText = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+    // 斬・貫・打・防・光 の前に対応する <img> タグを挟み込む
+    return safeText.replace(/([斬貫打防光])/g, (match, char) => {
+      const iconUrl = ICON_MAP[char];
+      if (iconUrl) {
+        return `<img src="${iconUrl}" class="inline-dice-icon" alt="${char}" crossorigin="anonymous">${char}`;
+      }
+      return char;
+    });
+  }
+
   function parseTextToPages() {
     const rawText = document.getElementById('importText').value.trim();
     if (!rawText) return;
@@ -527,7 +561,7 @@
             rarity: "common",
             detail: detail,
             imageSrc: null,
-            imgMode: "file" // "file" または "url"
+            imgMode: "file"
           });
         }
       } else {
@@ -577,7 +611,7 @@
             <div class="type-icon">${typeSymbol}</div>
           </div>
           ${artAreaHtml}
-          <div class="card-text-area">${p.detail || "テキストを入力"}</div>
+          <div class="card-text-area">${parseDiceIcons(p.detail)}</div>
         </div>
 
         <!-- 編集パネル -->
@@ -679,7 +713,7 @@
     const textArea = cardNode.querySelector('.card-text-area');
 
     titleDisplay.textContent = pages[index].name || "名称未設定";
-    textArea.textContent = pages[index].detail || "テキストを入力";
+    textArea.innerHTML = parseDiceIcons(pages[index].detail);
   }
 
   function downloadCardImage(index) {
@@ -689,7 +723,7 @@
     html2canvas(cardElement, {
       backgroundColor: null,
       scale: 1,
-      useCORS: true // 外部URL画像のキャプチャを許可
+      useCORS: true
     }).then(canvas => {
       const link = document.createElement('a');
       link.download = `${cardName}.png`;
