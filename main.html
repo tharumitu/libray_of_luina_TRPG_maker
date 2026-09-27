@@ -481,6 +481,7 @@
     <textarea id="importText" placeholder="例：
 3･突破-光0 近距離
 貫1d5 的中|光を1回復
+回1d6 勝利|混乱威力を軽減
 
 1･処分-光4 広域
 斬1d10+10 的中|対象を破滅させる"></textarea>
@@ -508,6 +509,7 @@
     '貫': 'https://static.wikia.nocookie.net/library-of-ruina/images/3/36/P.png/revision/latest/scale-to-width-down/24?cb=20200531142321&path-prefix=ja',
     '斬': 'https://static.wikia.nocookie.net/library-of-ruina/images/8/82/S.png/revision/latest/scale-to-width-down/24?cb=20200531142418&path-prefix=ja',
     '防': 'https://static.wikia.nocookie.net/library-of-ruina/images/f/f7/G.png/revision/latest/scale-to-width-down/24?cb=20200531142349&path-prefix=ja',
+    '回': 'https://static.wikia.nocookie.net/library-of-ruina/images/f/fa/E.png/revision/latest/scale-to-width-down/24?cb=20200531142313&path-prefix=ja',
     '光': 'https://static.wikia.nocookie.net/library-of-ruina/images/a/a6/Light.png/revision/latest/scale-to-width-down/20?cb=20200609120919&path-prefix=ja'
   };
 
@@ -517,7 +519,7 @@
     '遠距離': 'https://static.wikia.nocookie.net/library-of-ruina/images/3/3d/F.png/revision/latest/scale-to-width-down/20?cb=20210411110614&path-prefix=ja',
     '広域': 'https://static.wikia.nocookie.net/library-of-ruina/images/b/b0/FA.png/revision/latest/scale-to-width-down/20?cb=20210411110626&path-prefix=ja',
     '装着時': 'https://static.wikia.nocookie.net/library-of-ruina/images/6/69/I.png/revision/latest/scale-to-width-down/20?cb=20210103094327&path-prefix=ja',
-    '特殊': 'https://cdn.discordapp.com/attachments/1144239394182660147/1553779406911045692/eeb62b2bd6ff56d9.png?ex=6aba7d56&is=6ab92bd6&hm=3fc3b39f98f4268cbe119a9900d83b2a92cc14bfb397a0b9768f7b1bf10acada&'
+    '特殊': 'https://discord.com/channels/1138993248229138464/1144239394182660147/1553779407338872842'
   };
 
   // テキスト内の指定文字の前にアイコン画像を挿入する関数
@@ -526,7 +528,7 @@
     
     let safeText = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
-    return safeText.replace(/([斬貫打防光])/g, (match, char) => {
+    return safeText.replace(/([斬貫打防回避光])/g, (match, char) => {
       const iconUrl = ICON_MAP[char];
       if (iconUrl) {
         return `<img src="${iconUrl}" class="inline-dice-icon" alt="${char}" crossorigin="anonymous">${char}`;
