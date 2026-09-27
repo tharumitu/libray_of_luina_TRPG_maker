@@ -124,7 +124,7 @@
     /* --- 縦型カードレイアウト --- */
     .deck-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
       gap: 25px;
       margin-bottom: 25px;
     }
@@ -135,9 +135,10 @@
       gap: 10px;
     }
 
+    /* 絵を省略したカード本体構造 */
     .single-card {
       width: 100%;
-      height: 380px;
+      height: 280px;
       background: #0b0c10;
       border: 3px solid var(--rarity-common);
       border-radius: 8px;
@@ -156,7 +157,7 @@
 
     .card-banner {
       background: var(--rarity-common);
-      height: 42px;
+      height: 40px;
       display: flex;
       align-items: center;
       padding: 0 8px;
@@ -170,8 +171,8 @@
     .single-card[data-rarity="unique"] .card-banner { background: var(--rarity-unique); }
 
     .cost-circle {
-      width: 30px;
-      height: 30px;
+      width: 28px;
+      height: 28px;
       border-radius: 50%;
       background: #070709;
       border: 2px solid #fff;
@@ -180,7 +181,7 @@
       align-items: center;
       justify-content: center;
       font-weight: 900;
-      font-size: 1.1rem;
+      font-size: 1rem;
       flex-shrink: 0;
       box-shadow: 0 0 6px rgba(0,0,0,0.8);
     }
@@ -188,7 +189,7 @@
     .card-title-display {
       color: #fff;
       font-weight: bold;
-      font-size: 0.95rem;
+      font-size: 0.9rem;
       width: 100%;
       text-shadow: 1px 1px 3px #000;
       white-space: nowrap;
@@ -197,33 +198,22 @@
     }
 
     .type-icon {
-      width: 26px;
-      height: 26px;
+      width: 24px;
+      height: 24px;
       border-radius: 50%;
       background: rgba(0,0,0,0.7);
       border: 1px solid #fff;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 0.8rem;
+      font-size: 0.75rem;
       color: #fff;
       flex-shrink: 0;
     }
 
-    .card-art-area {
-      height: 120px;
-      background: radial-gradient(circle, #22222d 0%, #050507 100%);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #555;
-      font-size: 0.75rem;
-      border-bottom: 1px solid rgba(255,255,255,0.1);
-    }
-
     .card-text-area {
       flex: 1;
-      padding: 10px;
+      padding: 12px;
       background: #060608;
       color: #e2ded0;
       font-size: 0.85rem;
@@ -414,7 +404,7 @@
 
   <!-- テキスト一括読み込み欄 -->
   <div class="import-box">
-    <label>テキストから一括生成（ここにそのままコピペ）:</label>
+    <label>テキストから一括生成（ここにコピペ）:</label>
     <textarea id="importText" placeholder="例：
 3･突破-光0 近
 貫1d5 的中|光を1回復
@@ -440,12 +430,10 @@
 <script>
   let pages = [];
 
-  // テキスト形式を自動解析してカードを生成
   function parseTextToPages() {
     const rawText = document.getElementById('importText').value.trim();
     if (!rawText) return;
 
-    // 空行で区切って各カードブロックを取得
     const blocks = rawText.split(/\n\s*\n/);
     let newPages = [];
 
@@ -454,23 +442,20 @@
       if (lines.length === 0) return;
 
       const headerLine = lines[0].trim();
-      // パターン例: "3･突破-光0 近" や "1･落涙-光3 遠"
       const match = headerLine.match(/^(\d+)[\s･・]*([^-\n]+)-光?(\d+)\s*(近|遠|防|近接|遠距離|防御)?/);
 
       if (match) {
-        const count = parseInt(match[1], 10) || 1; // 枚数
-        const name = match[2].trim();              // カード名
-        const cost = parseInt(match[3], 10) || 0;  // コスト
-        let rangeRaw = match[4] || "近接";         // タイプ
+        const count = parseInt(match[1], 10) || 1;
+        const name = match[2].trim();
+        const cost = parseInt(match[3], 10) || 0;
+        let rangeRaw = match[4] || "近接";
         
         let range = "近接";
         if (rangeRaw.includes("遠")) range = "遠距離";
         if (rangeRaw.includes("防")) range = "防御";
 
-        // 残りの行（ダイスや効果）をテキストとして結合
         const detail = lines.slice(1).join('\n').trim();
 
-        // 枚数分だけ同じカードを追加
         for (let i = 0; i < count; i++) {
           newPages.push({
             name: name,
@@ -481,7 +466,6 @@
           });
         }
       } else {
-        // ヘッダー構文に合わない場合は1枚の普通カードとして生成
         newPages.push({
           name: headerLine,
           cost: 0,
@@ -494,7 +478,7 @@
 
     pages = pages.concat(newPages);
     renderPages();
-    document.getElementById('importText').value = ''; // 入力欄リセット
+    document.getElementById('importText').value = '';
   }
 
   function renderPages() {
@@ -517,10 +501,7 @@
             <div class="card-title-display">${p.name || "名称未設定"}</div>
             <div class="type-icon">${typeSymbol}</div>
           </div>
-          <div class="card-art-area">
-            CARD ART AREA
-          </div>
-          <div class="card-text-area">${p.detail || "効果・ダイスを入力..."}</div>
+          <div class="card-text-area">${p.detail || "テキストを入力"}</div>
         </div>
 
         <!-- 外部コントロールパネル -->
@@ -554,7 +535,7 @@
 
           <div>
             <label>効果・ダイス情報:</label>
-            <textarea style="height:60px; resize:vertical;" placeholder="改行もそのまま反映されます" oninput="pages[${index}].detail = this.value; updateCardView(${index});">${p.detail}</textarea>
+            <textarea style="height:60px; resize:vertical;" placeholder="テキストを入力" oninput="pages[${index}].detail = this.value; updateCardView(${index});">${p.detail}</textarea>
           </div>
 
           <div class="edit-row" style="margin-top:4px;">
@@ -575,16 +556,17 @@
     const textArea = cardNode.querySelector('.card-text-area');
 
     titleDisplay.textContent = pages[index].name || "名称未設定";
-    textArea.textContent = pages[index].detail || "効果・ダイスを入力...";
+    textArea.textContent = pages[index].detail || "テキストを入力";
   }
 
+  // 画像保存処理（標準解像度 scale:1 に変更）
   function downloadCardImage(index) {
     const cardElement = document.getElementById(`card-node-${index}`);
     const cardName = pages[index].name || `battle-page-${index + 1}`;
 
     html2canvas(cardElement, {
       backgroundColor: null,
-      scale: 2
+      scale: 1 // 標準解像度で出力
     }).then(canvas => {
       const link = document.createElement('a');
       link.download = `${cardName}.png`;
