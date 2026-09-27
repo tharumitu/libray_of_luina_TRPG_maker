@@ -135,10 +135,10 @@
       gap: 10px;
     }
 
-    /* 絵を省略したカード本体構造 */
+    /* 画像がある場合は高さが可変拡大するカード構造 */
     .single-card {
       width: 100%;
-      height: 280px;
+      min-height: 280px;
       background: #0b0c10;
       border: 3px solid var(--rarity-common);
       border-radius: 8px;
@@ -211,6 +211,24 @@
       flex-shrink: 0;
     }
 
+    /* 画像用ART AREA（動的に表示される） */
+    .card-art-area {
+      width: 100%;
+      height: 130px;
+      background: #000;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .card-art-area img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
     .card-text-area {
       flex: 1;
       padding: 12px;
@@ -221,6 +239,7 @@
       white-space: pre-wrap;
       word-break: break-all;
       overflow-y: auto;
+      min-height: 200px;
     }
 
     .card-edit-panel {
@@ -248,6 +267,11 @@
     .edit-row input, .edit-row select, .edit-row textarea {
       font-size: 0.75rem;
       padding: 3px 6px;
+    }
+
+    .file-input {
+      font-size: 0.7rem !important;
+      padding: 2px !important;
     }
 
     /* ボタン */
@@ -301,6 +325,16 @@
       padding: 4px 8px;
       font-size: 0.75rem;
       width: 100%;
+    }
+
+    .btn-remove-img {
+      background: #3a2222;
+      border: 1px solid #8b3d3d;
+      color: #ffb8b8;
+      font-size: 0.7rem;
+      padding: 2px 5px;
+      cursor: pointer;
+      white-space: nowrap;
     }
 
     .btn-ccfolia {
@@ -462,7 +496,8 @@
             cost: cost,
             range: range,
             rarity: "common",
-            detail: detail
+            detail: detail,
+            imageSrc: null // 初期状態は画像なし
           });
         }
       } else {
@@ -471,7 +506,8 @@
           cost: 0,
           range: "近接",
           rarity: "common",
-          detail: lines.slice(1).join('\n').trim()
+          detail: lines.slice(1).join('\n').trim(),
+          imageSrc: null
         });
       }
     });
@@ -493,6 +529,13 @@
       if (p.range === "遠距離") typeSymbol = "🏹";
       if (p.range === "防御") typeSymbol = "🛡️";
 
+      // 画像が読み込まれている時だけ ART AREA を出力
+      const artAreaHtml = p.imageSrc ? `
+        <div class="card-art-area">
+          <img src="${p.imageSrc}" alt="card art">
+        </div>
+      ` : '';
+
       wrapper.innerHTML = `
         <!-- カード本体 (画像化される領域) -->
         <div class="single-card" id="card-node-${index}" data-rarity="${p.rarity}">
@@ -501,6 +544,7 @@
             <div class="card-title-display">${p.name || "名称未設定"}</div>
             <div class="type-icon">${typeSymbol}</div>
           </div>
+          ${artAreaHtml}
           <div class="card-text-area">${p.detail || "テキストを入力"}</div>
         </div>
 
@@ -533,6 +577,12 @@
             </select>
           </div>
 
+          <div class="edit-row">
+            <label>画像:</label>
+            <input type="file" class="file-input" accept="image/*" onchange="handleImageUpload(event, ${index})">
+            ${p.imageSrc ? `<button type="button" class="btn-remove-img" onclick="removeCardImage(${index})">削除</button>` : ''}
+          </div>
+
           <div>
             <label>効果・ダイス情報:</label>
             <textarea style="height:60px; resize:vertical;" placeholder="テキストを入力" oninput="pages[${index}].detail = this.value; updateCardView(${index});">${p.detail}</textarea>
@@ -548,6 +598,25 @@
     });
   }
 
+  // 画像ファイル読み込み処理
+  function handleImageUpload(event, index) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      pages[index].imageSrc = e.target.result;
+      renderPages();
+    };
+    reader.readAsDataURL(file);
+  }
+
+  // 画像削除処理
+  function removeCardImage(index) {
+    pages[index].imageSrc = null;
+    renderPages();
+  }
+
   function updateCardView(index) {
     const cardNode = document.getElementById(`card-node-${index}`);
     if (!cardNode) return;
@@ -559,14 +628,13 @@
     textArea.textContent = pages[index].detail || "テキストを入力";
   }
 
-  // 画像保存処理（標準解像度 scale:1 に変更）
   function downloadCardImage(index) {
     const cardElement = document.getElementById(`card-node-${index}`);
     const cardName = pages[index].name || `battle-page-${index + 1}`;
 
     html2canvas(cardElement, {
       backgroundColor: null,
-      scale: 1 // 標準解像度で出力
+      scale: 1
     }).then(canvas => {
       const link = document.createElement('a');
       link.download = `${cardName}.png`;
@@ -576,7 +644,7 @@
   }
 
   function addPage() {
-    pages.push({ name: "", cost: 0, range: "近接", rarity: "common", detail: "" });
+    pages.push({ name: "", cost: 0, range: "近接", rarity: "common", detail: "", imageSrc: null });
     renderPages();
   }
 
