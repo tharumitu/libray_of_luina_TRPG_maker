@@ -196,18 +196,20 @@
       text-overflow: ellipsis;
     }
 
+    /* 右上攻撃タイプアイコン表示エリア */
     .type-icon {
-      width: 24px;
-      height: 24px;
-      border-radius: 50%;
-      background: rgba(0,0,0,0.7);
-      border: 1px solid #fff;
+      width: 26px;
+      height: 26px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 0.75rem;
-      color: #fff;
       flex-shrink: 0;
+    }
+
+    .type-icon img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
     }
 
     /* 画像用ART AREA */
@@ -477,12 +479,11 @@
   <div class="import-box">
     <label>テキストから一括生成（ここにコピペ）:</label>
     <textarea id="importText" placeholder="例：
-3･突破-光0 近
+3･突破-光0 近距離
 貫1d5 的中|光を1回復
 
-1･落涙-光3 近
-戦闘開始|NE1蓄積
-斬1d3+2 的中|混乱ダメージを5与える"></textarea>
+1･処分-光4 広域
+斬1d10+10 的中|対象を破滅させる"></textarea>
     <button type="button" class="btn btn-import" onclick="parseTextToPages()">⚡ テキストからカードを一括読み込み</button>
   </div>
 
@@ -501,7 +502,7 @@
 <script>
   let pages = [];
 
-  // アイコンURL定義
+  // テキスト内ダイス用アイコンURL定義
   const ICON_MAP = {
     '打': 'https://static.wikia.nocookie.net/library-of-ruina/images/a/a2/H.png/revision/latest/scale-to-width-down/24?cb=20200531142341&path-prefix=ja',
     '貫': 'https://static.wikia.nocookie.net/library-of-ruina/images/3/36/P.png/revision/latest/scale-to-width-down/24?cb=20200531142321&path-prefix=ja',
@@ -510,14 +511,21 @@
     '光': 'https://static.wikia.nocookie.net/library-of-ruina/images/a/a6/Light.png/revision/latest/scale-to-width-down/20?cb=20200609120919&path-prefix=ja'
   };
 
+  // 右上カードタイプ用アイコンURL定義
+  const TYPE_ICON_MAP = {
+    '近距離': 'https://static.wikia.nocookie.net/library-of-ruina/images/9/9e/N.png/revision/latest/scale-to-width-down/20?cb=20210411110634&path-prefix=ja',
+    '遠距離': 'https://static.wikia.nocookie.net/library-of-ruina/images/3/3d/F.png/revision/latest/scale-to-width-down/20?cb=20210411110614&path-prefix=ja',
+    '広域': 'https://static.wikia.nocookie.net/library-of-ruina/images/b/b0/FA.png/revision/latest/scale-to-width-down/20?cb=20210411110626&path-prefix=ja',
+    '装着時': 'https://static.wikia.nocookie.net/library-of-ruina/images/6/69/I.png/revision/latest/scale-to-width-down/20?cb=20210103094327&path-prefix=ja',
+    '特殊': 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="%23e8c374"><path d="M12 2l2.4 7.2h7.6l-6 4.8 2.4 7.2-6-4.8-6 4.8 2.4-7.2-6-4.8h7.6z"/></svg>'
+  };
+
   // テキスト内の指定文字の前にアイコン画像を挿入する関数
   function parseDiceIcons(text) {
     if (!text) return "テキストを入力";
     
-    // HTML特殊文字を安全に置換
     let safeText = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
-    // 斬・貫・打・防・光 の前に対応する <img> タグを挟み込む
     return safeText.replace(/([斬貫打防光])/g, (match, char) => {
       const iconUrl = ICON_MAP[char];
       if (iconUrl) {
@@ -539,17 +547,19 @@
       if (lines.length === 0) return;
 
       const headerLine = lines[0].trim();
-      const match = headerLine.match(/^(\d+)[\s･・]*([^-\n]+)-光?(\d+)\s*(近|遠|防|近接|遠距離|防御)?/);
+      const match = headerLine.match(/^(\d+)[\s･・]*([^-\n]+)-光?(\d+)\s*([^\n]+)?/);
 
       if (match) {
         const count = parseInt(match[1], 10) || 1;
         const name = match[2].trim();
         const cost = parseInt(match[3], 10) || 0;
-        let rangeRaw = match[4] || "近接";
+        let rangeRaw = match[4] ? match[4].trim() : "近距離";
         
-        let range = "近接";
+        let range = "近距離";
         if (rangeRaw.includes("遠")) range = "遠距離";
-        if (rangeRaw.includes("防")) range = "防御";
+        else if (rangeRaw.includes("広域")) range = "広域";
+        else if (rangeRaw.includes("装着")) range = "装着時";
+        else if (rangeRaw.includes("特殊")) range = "特殊";
 
         const detail = lines.slice(1).join('\n').trim();
 
@@ -568,7 +578,7 @@
         newPages.push({
           name: headerLine,
           cost: 0,
-          range: "近接",
+          range: "近距離",
           rarity: "common",
           detail: lines.slice(1).join('\n').trim(),
           imageSrc: null,
@@ -590,9 +600,7 @@
       const wrapper = document.createElement('div');
       wrapper.className = 'card-wrapper';
 
-      let typeSymbol = "⚔️";
-      if (p.range === "遠距離") typeSymbol = "🏹";
-      if (p.range === "防御") typeSymbol = "🛡️";
+      const typeIconUrl = TYPE_ICON_MAP[p.range] || TYPE_ICON_MAP['近距離'];
 
       const artAreaHtml = p.imageSrc ? `
         <div class="card-art-area">
@@ -608,7 +616,9 @@
           <div class="card-banner">
             <div class="cost-circle">${p.cost}</div>
             <div class="card-title-display">${p.name || "名称未設定"}</div>
-            <div class="type-icon">${typeSymbol}</div>
+            <div class="type-icon">
+              <img src="${typeIconUrl}" alt="${p.range}" crossorigin="anonymous">
+            </div>
           </div>
           ${artAreaHtml}
           <div class="card-text-area">${parseDiceIcons(p.detail)}</div>
@@ -623,12 +633,14 @@
 
           <div class="edit-row">
             <label>コスト:</label>
-            <input type="number" value="${p.cost}" style="width:50px;" onchange="pages[${index}].cost = Number(this.value); renderPages();">
+            <input type="number" value="${p.cost}" style="width:45px;" onchange="pages[${index}].cost = Number(this.value); renderPages();">
             
             <select style="flex:1;" onchange="pages[${index}].range = this.value; renderPages();">
-              <option value="近接" ${p.range==='近接'?'selected':''}>近接</option>
+              <option value="近距離" ${p.range==='近距離'?'selected':''}>近距離</option>
               <option value="遠距離" ${p.range==='遠距離'?'selected':''}>遠距離</option>
-              <option value="防御" ${p.range==='防御'?'selected':''}>防御</option>
+              <option value="広域" ${p.range==='広域'?'selected':''}>広域</option>
+              <option value="装着時" ${p.range==='装着時'?'selected':''}>装着時</option>
+              <option value="特殊" ${p.range==='特殊'?'selected':''}>特殊</option>
             </select>
           </div>
 
@@ -733,7 +745,7 @@
   }
 
   function addPage() {
-    pages.push({ name: "", cost: 0, range: "近接", rarity: "common", detail: "", imageSrc: null, imgMode: "file" });
+    pages.push({ name: "", cost: 0, range: "近距離", rarity: "common", detail: "", imageSrc: null, imgMode: "file" });
     renderPages();
   }
 
